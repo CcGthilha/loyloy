@@ -1,41 +1,52 @@
 import nacl from 'tweetnacl'
 
 const encoder = new TextEncoder()
-const decoder = new TextDecoder()
+const decoder = new TextDecoder('utf-8', { fatal: true })
+const { publicKeyLength, secretKeyLength, nonceLength } = nacl.box
 
-const toBase64 = (bytes) => btoa(String.fromCharCode(...bytes))
-const fromBase64 = (text) => Uint8Array.from(atob(text), (c) => c.charCodeAt(0))
+export const toBase64 = (bytes) =>
+  btoa(String.fromCharCode(...bytes)).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '')
+export const fromBase64 = (text) =>
+  Uint8Array.from(atob(text.replaceAll('-', '+').replaceAll('_', '/')), (c) => c.charCodeAt(0))
 const toHex = (bytes) => Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
 
 export const randomId = () => toHex(nacl.randomBytes(8))
-
-export const newSecret = () =>
-  toBase64(nacl.randomBytes(18)).replaceAll('+', '-').replaceAll('/', '_')
-
-export const isSecret = (text) => /^[\w-]{24}$/.test(text)
-
-// รหัสอยู่หลัง # ในลิงก์ ไม่ถูกส่งให้ตัวกลาง: ตัวกลางเห็นแค่ชื่อห้องที่ hash แล้วกับข้อความเข้ารหัส
-export function deriveRoom(secret) {
-  const topic = nacl.hash(encoder.encode(`topic:${secret}`)).slice(0, 16)
-  const key = nacl.hash(encoder.encode(`key:${secret}`)).slice(0, 32)
-  return { topic: `loykrathong/v1/${toHex(topic)}`, key }
+export const newKeyPair = () => {
+  const { publicKey, secretKey } = nacl.box.keyPair()
+  return { publicKey: toBase64(publicKey), secretKey: toBase64(secretKey) }
 }
 
-export function seal(message, key) {
-  const nonce = nacl.randomBytes(nacl.secretbox.nonceLength)
-  const box = nacl.secretbox(encoder.encode(JSON.stringify(message)), nonce, key)
-  const packed = new Uint8Array(nonce.length + box.length)
-  packed.set(nonce)
-  packed.set(box, nonce.length)
+export const boxTopic = (publicKey) =>
+  `loykrathong/v2/${toHex(nacl.hash(encoder.encode(`box:${publicKey}`)).slice(0, 16))}`
+
+export function ownsBox(secretKey, publicKey) {
+  try {
+    const bytes = fromBase64(secretKey)
+    return bytes.length === secretKeyLength && toBase64(nacl.box.keyPair.fromSecretKey(bytes).publicKey) === publicKey
+  } catch {
+    return false
+  }
+}
+
+// ล็อกด้วยกุญแจสาธารณะของเจ้าของ: แม้แต่คนส่งก็เปิดคืนไม่ได้
+export function seal(message, publicKey) {
+  const once = nacl.box.keyPair()
+  const nonce = nacl.randomBytes(nonceLength)
+  const box = nacl.box(encoder.encode(JSON.stringify(message)), nonce, fromBase64(publicKey), once.secretKey)
+  const packed = new Uint8Array(publicKeyLength + nonceLength + box.length)
+  packed.set(once.publicKey)
+  packed.set(nonce, publicKeyLength)
+  packed.set(box, publicKeyLength + nonceLength)
   return toBase64(packed)
 }
 
-export function open(text, key) {
+export function open(text, secretKey) {
   try {
     if (text.length > 4096) return null
     const packed = fromBase64(text)
-    const size = nacl.secretbox.nonceLength
-    const plain = nacl.secretbox.open(packed.slice(size), packed.slice(0, size), key)
+    const from = packed.slice(0, publicKeyLength)
+    const nonce = packed.slice(publicKeyLength, publicKeyLength + nonceLength)
+    const plain = nacl.box.open(packed.slice(publicKeyLength + nonceLength), nonce, from, fromBase64(secretKey))
     return plain && JSON.parse(decoder.decode(plain))
   } catch {
     return null

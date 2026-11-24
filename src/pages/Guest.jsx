@@ -2,28 +2,24 @@ import { useEffect, useState, useSyncExternalStore } from 'react'
 import { Check, Eye, Feather, RotateCcw, Waves } from 'lucide-react'
 import Couple from '../components/Couple.jsx'
 import ShareButton from '../components/ShareButton.jsx'
-import { packReply } from '../invite.js'
-import { clip, WISH_MAX } from '../krathong.js'
-import { randomId } from '../room/crypto.js'
-import { createGuest } from '../room/link.js'
+import { createOutbox } from '../room/link.js'
 import { connectTransport } from '../room/transport.js'
+import { packReply } from '../route.js'
 import { useEnded } from '../useEnded.js'
+import { clip, OWNER_PUBLIC } from '../wish.js'
 
-export default function Guest({ invite, onFloat }) {
-  const [link] = useState(() => createGuest({
-    id: randomId(),
-    connect: (handlers) => connectTransport(invite.secret, handlers),
-  }))
-  const { delivered } = useSyncExternalStore(link.subscribe, link.getState)
+export default function Guest({ onFloat }) {
+  const [box] = useState(() => createOutbox({ connect: connectTransport, publicKey: OWNER_PUBLIC }))
+  const { delivered } = useSyncExternalStore(box.subscribe, box.getState)
   const [step, setStep] = useState('read')
   const [wish, setWish] = useState('')
   const floating = step === 'float'
   const ended = useEnded(floating)
 
   useEffect(() => {
-    link.open()
-    return link.close
-  }, [link])
+    box.open()
+    return box.close
+  }, [box])
   useEffect(() => onFloat(floating), [floating, onFloat])
 
   const submit = (event) => {
@@ -33,19 +29,19 @@ export default function Guest({ invite, onFloat }) {
     document.activeElement?.blur()
     window.scrollTo({ top: 0 })
     setWish(text)
-    link.float(text)
+    box.float(text)
     setStep('float')
   }
 
   const again = () => {
-    link.again()
+    box.again()
     setWish('')
     setStep('write')
   }
 
   return (
     <div className={floating ? 'play floating' : 'play'}>
-      <Couple invite={invite} reply={wish} typing={step === 'write'} floating={floating} />
+      <Couple reply={wish} typing={step === 'write'} floating={floating} />
       <div className="foot" inert={floating}>
         <div>
           {step === 'read' && (
@@ -56,7 +52,7 @@ export default function Guest({ invite, onFloat }) {
               <p className="note" id="warn"><Eye size={22} aria-hidden="true" />อธิฐานดีๆเด้อ เค้าเห็นหมดทุกคำที่เธอพิมพ์</p>
               <textarea
                 rows="2" aria-label="คำขอของเธอ" aria-describedby="warn" placeholder="ขอให้…" value={wish}
-                onChange={(e) => setWish(clip(e.target.value, WISH_MAX))}
+                onChange={(e) => setWish(clip(e.target.value))}
               />
               <button className={wish.trim() ? 'primary' : 'primary waiting'} type="submit" disabled={!wish.trim()}>
                 <Waves size={20} aria-hidden="true" />ลอย
@@ -68,8 +64,8 @@ export default function Guest({ invite, onFloat }) {
       {ended && (
         <div className="end">
           {delivered
-            ? <p className="status" role="status"><Check size={18} aria-hidden="true" />ส่งถึง{invite.host}แล้ว</p>
-            : <ShareButton hash={packReply(invite, wish)}>ส่งให้{invite.host}ดู</ShareButton>}
+            ? <p className="status" role="status"><Check size={18} aria-hidden="true" />ฝากถึงเค้าแล้ว</p>
+            : <ShareButton hash={packReply(wish)}>ส่งให้เค้าดู</ShareButton>}
           <button className="ghost" type="button" onClick={again}><RotateCcw size={18} aria-hidden="true" />ลอยอีก</button>
         </div>
       )}

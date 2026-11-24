@@ -1,32 +1,24 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Scene from './components/Scene.jsx'
-import { readRoute, saveMine } from './invite.js'
-import Create from './pages/Create.jsx'
 import Guest from './pages/Guest.jsx'
-import { Replay, Watch } from './pages/Watch.jsx'
+import Inbox from './pages/Inbox.jsx'
+import Replay from './pages/Replay.jsx'
+import { readRoute } from './route.js'
 
 export default function App() {
-  const [route, setRoute] = useState(() => readRoute(window.location.hash))
+  const [route] = useState(() => readRoute(window.location.hash))
   const [celebrate, setCelebrate] = useState(false)
-  const { page, invite } = route
 
-  const go = (next, hash) => {
-    window.history.replaceState(null, '', hash || window.location.pathname + window.location.search)
-    setCelebrate(false)
-    setRoute(next)
-  }
-  const made = (mine) => {
-    saveMine(mine)
-    go({ page: 'watch', invite: mine }, '#me')
-  }
-  const edit = () => go({ page: 'create', old: invite }, '')
+  // จำกุญแจไว้แล้ว เอาออกจากแถบที่อยู่ กันเผลอแชร์
+  useEffect(() => {
+    if (route.remembered) window.history.replaceState(null, '', '#me')
+  }, [route])
 
   return (
     <Scene celebrate={celebrate}>
-      {page === 'create' && <Create old={route.old} broken={route.broken} onDone={made} />}
-      {page === 'guest' && <Guest invite={invite} onFloat={setCelebrate} />}
-      {page === 'watch' && <Watch invite={invite} onEdit={edit} onFloat={setCelebrate} />}
-      {page === 'replay' && <Replay invite={invite} reply={route.reply} onFloat={setCelebrate} />}
+      {route.page === 'guest' && <Guest onFloat={setCelebrate} />}
+      {route.page === 'inbox' && <Inbox secretKey={route.secretKey} onFloat={setCelebrate} />}
+      {route.page === 'replay' && <Replay reply={route.reply} onFloat={setCelebrate} />}
     </Scene>
   )
 }

@@ -12,8 +12,8 @@
 
 * { box-sizing: border-box; }
 body { margin: 0; background: #15143a; color: var(--text); }
-button, input, textarea { font: inherit; color: inherit; }
-h1, h2, p { margin: 0; }
+button, textarea { font: inherit; color: inherit; }
+h1, p { margin: 0; }
 :focus-visible { outline: 3px solid var(--candle); outline-offset: 3px; }
 
 /* ฉาก */
@@ -55,12 +55,8 @@ h1, h2, p { margin: 0; }
 
 /* แผงและปุ่ม */
 h1 { font-size: clamp(1.9rem, 8vw, 3rem); line-height: 1.3; text-align: center; text-shadow: 0 2px 16px #15143a; }
-.create { min-height: 100dvh; display: grid; align-content: space-evenly; gap: 20px; max-width: 480px; margin: auto; padding: 24px 16px; }
 .panel { display: grid; gap: 12px; padding: 16px; border-radius: 24px; background: var(--panel); border: 1px solid var(--line); text-align: left; }
-.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.field { display: grid; min-width: 0; }
-.field span { margin-bottom: 4px; font-size: 0.9rem; color: var(--muted); }
-input, textarea { width: 100%; min-width: 0; min-height: 44px; padding: 10px 14px; font-size: 16px; line-height: 1.5; border-radius: 14px; border: 1.5px solid var(--line); background: rgba(10, 10, 40, 0.6); resize: none; }
+textarea { width: 100%; min-width: 0; min-height: 44px; padding: 10px 14px; font-size: 16px; line-height: 1.5; border-radius: 14px; border: 1.5px solid var(--line); background: rgba(10, 10, 40, 0.6); resize: none; }
 ::placeholder { color: #a9a1cc; opacity: 1; }
 .note { text-wrap: balance; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 700; line-height: 1.45; color: var(--candle); }
 .note svg { flex: none; }
@@ -71,10 +67,18 @@ input, textarea { width: 100%; min-width: 0; min-height: 44px; padding: 10px 14p
 .primary.waiting { opacity: 0; pointer-events: none; }
 .status { display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-align: center; overflow-wrap: anywhere; }
 
+/* หน้าลับ */
+.inbox { display: grid; align-content: start; justify-items: center; gap: 16px; width: min(100%, 520px); min-height: 100dvh; margin: 0 auto; padding: 32px 16px; }
+.inbox ul { display: grid; gap: 12px; width: 100%; margin: 0; padding: 0; list-style: none; }
+.letter p { font-size: 1.1rem; line-height: 1.55; overflow-wrap: anywhere; white-space: pre-line; }
+.letter footer { display: flex; align-items: center; gap: 8px; }
+.letter time { flex: 1; font-size: 0.85rem; color: var(--muted); }
+.letter .ghost { min-height: 44px; width: 44px; padding: 0; }
+
 /* สองสาว */
 .play { position: relative; min-height: 100dvh; display: flex; flex-direction: column; justify-content: flex-end; }
 /* ระยะจากมือถึงเส้นขอบน้ำ คิดจากตอนแผงหุบแล้ว (--under = ที่เหลือใต้ฉาก) */
-.couple { --w: min(100vw, 600px, 78dvh); --under: 110px; --travel: calc(-1 * max(50px, 58dvh - var(--under) - var(--w) * 0.16)); position: relative; width: var(--w); margin: 0 auto; }
+.couple { --w: min(100vw, 600px, 78dvh); --under: 92px; --travel: calc(-1 * max(50px, 58dvh - var(--under) - var(--w) * 0.16)); position: relative; width: var(--w); margin: 0 auto; }
 .bubbles { position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: flex-end; gap: 12%; padding: 12px 12px 16px; min-height: 90px; }
 .bubble { position: relative; max-width: 62%; padding: 10px 14px; border-radius: 18px; background: #fff3d6; color: var(--ink); overflow-wrap: anywhere; animation: rise 0.7s ease-out; }
 .bubble.right { margin-left: auto; }
@@ -82,8 +86,7 @@ input, textarea { width: 100%; min-width: 0; min-height: 44px; padding: 10px 14p
 .bubble.right::after { left: auto; right: 34px; }
 .floating .bubble { max-width: 46%; }
 .floating .bubble.right { animation-delay: 1.5s; animation-fill-mode: backwards; }
-.bubble h2 { font-size: 0.85rem; color: #8a4a1f; }
-.bubble p { line-height: 1.45; white-space: pre-line; }
+.bubble p { font-size: clamp(1rem, 1.6vw, 1.2rem); text-wrap: balance; line-height: 1.45; white-space: pre-line; }
 .bubble p.long { font-size: 0.85rem; line-height: 1.35; }
 .dots { display: flex; gap: 6px; padding: 14px 16px; }
 .dots i { width: 8px; height: 8px; border-radius: 50%; background: #b98b5c; animation: blink 1.2s infinite alternate; }
@@ -103,21 +106,17 @@ input, textarea { width: 100%; min-width: 0; min-height: 44px; padding: 10px 14p
 .released .our-krathong { animation: sail 9s cubic-bezier(0.35, 0.05, 0.4, 1) forwards; }
 .meet { position: absolute; left: 50%; top: 74%; width: 30px; height: 30px; margin-left: -15px; color: #ff9fbe; fill: #ff9fbe; opacity: 0; }
 .released .meet { animation: meet 3s 8s ease-out forwards; }
-.names { position: absolute; left: 0; right: 0; bottom: -26px; display: grid; grid-template-columns: 1fr 1fr; gap: 4%; padding: 0 4%; text-align: center; font-size: 0.95rem; text-shadow: 0 1px 6px #2a1628; }
-.names span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
 /* แผงใต้ท่าน้ำ หุบตอนลอยให้เห็นน้ำเต็มๆ */
-.foot { position: relative; z-index: 3; display: grid; grid-template-rows: 1fr; width: min(100%, 480px); margin: 0 auto; padding: 36px 16px max(16px, env(safe-area-inset-bottom)); text-align: center; transition: grid-template-rows 1.1s ease, opacity 0.4s; }
+.foot { position: relative; z-index: 3; display: grid; grid-template-rows: 1fr; width: min(100%, 480px); margin: 0 auto; padding: 18px 16px max(16px, env(safe-area-inset-bottom)); text-align: center; transition: grid-template-rows 1.1s ease, opacity 0.4s; }
 .foot > div { min-height: 0; }
 .floating .foot { grid-template-rows: 0fr; opacity: 0; padding-bottom: 60px; }
 .floating .foot > div { overflow: hidden; }
-.foot-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
-.foot-buttons .status { width: 100%; }
 .end { position: absolute; z-index: 4; left: 0; right: 0; bottom: max(14px, env(safe-area-inset-bottom)); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; padding: 0 16px; animation: rise 0.8s ease-out; }
 
 @keyframes twinkle { from { opacity: 0.35; } }
 @keyframes drift { to { transform: translateX(26px); } }
-@keyframes lift { from { transform: translate(0, 46vh); } 50% { transform: translate(var(--sway), 18vh); } to { transform: translate(0, -90px); } }
+@keyframes lift { from { transform: translate(0, 42vh); opacity: 0; } 14% { opacity: 1; } 50% { transform: translate(var(--sway), 18vh); } to { transform: translate(0, -90px); } }
 @keyframes pass { from { transform: translateX(-70px); } to { transform: translateX(calc(100vw + 20px)); } }
 @keyframes burst { 0% { opacity: 1; transform: translateY(0) scaleY(0.4); } 35% { opacity: 1; transform: translateY(-44px); } 70%, 100% { opacity: 0; transform: translateY(-60px) scaleY(0.3); } }
 @keyframes bob { from { transform: translateY(-3%) rotate(-1.5deg); } to { transform: translateY(3%) rotate(1.5deg); } }
