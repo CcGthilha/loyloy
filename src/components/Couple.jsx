@@ -41,8 +41,9 @@ export default function Couple({ reply, typing, floating }) {
             <rect x="-2400" y="262" width="5280" height="9" fill="#7a5167" />
             <path d="M-2400 318H2880M-2400 372H2880M-2400 430H2880M-2400 490H2880" stroke="#3a2439" strokeWidth="4" />
           </g>
-          <Girl kind="hoodie" />
-          <g transform="translate(480 0) scale(-1 1)"><Girl kind="varsity" /></g>
+          {/* ซ้าย = เรา (คำขอเราอยู่ฝั่งนี้), ขวา = เธอ */}
+          <Girl kind="varsity" />
+          <g transform="translate(480 0) scale(-1 1)"><Girl kind="hoodie" /></g>
         </svg>
         <div className="our-krathong"><div className="krathong bob"><Krathong krathong={OURS} /></div></div>
         <Heart className="meet" aria-hidden="true" />
